@@ -620,65 +620,182 @@ var irrelevant = (function (exports) {
 })(typeof self !== 'undefined' ? self : this);
 
 },{}],2:[function(require,module,exports){
-// Write your JavaScript code here!
+const {
+  formSubmission,
+  myFetch,
+  pickPlanet,
+  addDestinationInfo,
+} = require("./scriptHelper");
 
-window.addEventListener("load", function() {
+window.addEventListener("load", function () {
+  let button = document.getElementById("formSubmit");
 
-    let listedPlanets;
-    // Set listedPlanetsResponse equal to the value returned by calling myFetch()
-    let listedPlanetsResponse;
-    listedPlanetsResponse.then(function (result) {
-        listedPlanets = result;
-        console.log(listedPlanets);
-    }).then(function () {
-        console.log(listedPlanets);
-        // Below this comment call the appropriate helper functions to pick a planet fom the list of planets and add that information to your destination.
+  button.addEventListener("click", function () {
+    let pilot = document.getElementById("pilotName").value;
+    let copilot = document.getElementById("copilotName").value;
+    let fuelLevel = document.getElementById("fuelLevel").value;
+    let cargoLevel = document.getElementById("cargoMass").value;
+
+    formSubmission(
+      document,
+      document.getElementById("faultyItems"),
+      pilot,
+      copilot,
+      fuelLevel,
+      cargoLevel
+    );
+
+  });
+
+  // Assuming you have the pilot and co-pilot names
+
+  // Update the pilotStatus and copilotStatus <li> elements with pilot and co-pilot names
+
+  let listedPlanets;
+  // Set listedPlanetsResponse equal to the value returned by calling myFetch()
+  let listedPlanetsResponse = myFetch();
+
+  listedPlanetsResponse
+    .then(function (result) {
+      listedPlanets = result;
+      console.log(listedPlanets);
     })
-    
- });
-},{}],3:[function(require,module,exports){
+    .then(function () {
+      console.log(listedPlanets);
+      // Below this comment call the appropriate helper functions to pick a planet fom the list of planets and add that information to your destination.
+      let destination = pickPlanet(listedPlanets);
+
+      addDestinationInfo(
+        document,
+        destination.name,
+        destination.diameter,
+        destination.star,
+        destination.distance,
+        destination.moons,
+        destination.image
+      );
+    });
+});
+
+},{"./scriptHelper":3}],3:[function(require,module,exports){
 // Write your helper functions here!
+require("cross-fetch/polyfill");
 
-require('cross-fetch/polyfill');
+function addDestinationInfo(
+  document,
+  name,
+  diameter,
+  star,
+  distance,
+  moons,
+  imageUrl
+) {
+  document.getElementById(
+    "missionTarget"
+  ).innerHTML = `<h2>Mission Destination</h2>
+    <ol>
+        <li>Name:${name} </li>
+        <li>Diameter: ${diameter} </li>
+        <li>Star: ${star}</li>
+        <li>Distance from Earth:${distance} </li>
+        <li>Number of Moons: ${moons} </li>
+    </ol>
+    <img src="${imageUrl}">`;
+}
 
-function addDestinationInfo(document, name, diameter, star, distance, moons, imageUrl) {
-    // Here is the HTML formatting for our mission target div.
-    /*
-                 <h2>Mission Destination</h2>
-                 <ol>
-                     <li>Name: </li>
-                     <li>Diameter: </li>
-                     <li>Star: ${star}</li>
-                     <li>Distance from Earth: </li>
-                     <li>Number of Moons: </li>
-                 </ol>
-                 <img src="">
-    */
- }
- 
- function validateInput(testInput) {
-    
- }
- 
- function formSubmission(document, list, pilot, copilot, fuelLevel, cargoLevel) {
-    
- }
- 
- async function myFetch() {
-     let planetsReturned;
- 
-     planetsReturned = await fetch().then( function(response) {
-         });
- 
-     return planetsReturned;
- }
- 
- function pickPlanet(planets) {
- }
- 
- module.exports.addDestinationInfo = addDestinationInfo;
- module.exports.validateInput = validateInput;
- module.exports.formSubmission = formSubmission;
- module.exports.pickPlanet = pickPlanet; 
- module.exports.myFetch = myFetch;
+function validateInput(testInput) {
+  if (testInput === "") {
+    return "Empty";
+  } else if (!isNaN(testInput)) {
+    return "Is a Number";
+  } else if (isNaN(testInput)) {
+    return "Not a Number";
+  }
+}
+
+function formSubmission(document, list, pilot, copilot, fuelLevel, cargoLevel) {
+  /*
+  Use validateInput in this function to test the different inputs 
+    pilot, copilot, fuelLevel, cargoLevel 
+    and alert if something is wrong
+  */
+  let pilotValidation = validateInput(pilot);
+  let copilotValidation = validateInput(copilot);
+  let fuelLevelValidation = validateInput(fuelLevel);
+  let cargoLevelValidation = validateInput(cargoLevel);
+
+  if (
+    pilotValidation === "Empty" ||
+    copilotValidation === "Empty" ||
+    fuelLevelValidation === "Empty" ||
+    cargoLevelValidation === "Empty"
+  ) {
+    alert("All fields are required!");
+    return;
+  }
+
+  if(fuelLevelValidation === "Not a Number" || cargoLevelValidation === "Not a Number" || pilotValidation === "Is a Number" || copilotValidation === "Is a Number"){
+    alert("Make sure to enter valid information for each field!")
+    return;
+  }
+
+  list.style["visibility"] = "visible";
+
+  let hasError = false;
+
+  let h2 = document.getElementById("launchStatus");
+
+  let pilotStatus = document.getElementById("pilotStatus");
+  pilotStatus.textContent = `Pilot ${pilot} is ready for launch`;
+
+  let copilotStatus = document.getElementById("copilotStatus");
+  copilotStatus.textContent = `Co-pilot ${copilot} is ready for launch`;
+
+  let fuelStatus = document.getElementById("fuelStatus");
+
+  if (fuelLevel < 10000) {
+    fuelStatus.textContent = '"Fuel level too low for launch';
+    hasError = true;
+  } else {
+    fuelStatus.textContent = "Fuel level high enough for launch";
+  }
+
+  let cargoStatus = document.getElementById("cargoStatus");
+
+  if (cargoLevel > 10000) {
+    cargoStatus.textContent = "Cargo mass too heavy for launch";
+    hasError = true;
+  } else {
+    cargoStatus.textContent = "Cargo mass low enough for launch";
+  }
+
+  if (hasError) {
+    h2.style["color"] = "red";
+    h2.textContent = "Shuttle Not Ready for Launch";
+  } else {
+    h2.style["color"] = "green";
+    h2.textContent = "Shuttle is Ready for Launch";
+  }
+}
+
+async function myFetch() {
+  let planetsReturned = await fetch(
+    "https://handlers.education.launchcode.org/static/planets.json"
+  );
+
+  return planetsReturned.json();
+}
+
+function pickPlanet(planets) {
+  let randomPlanet = Math.floor(Math.random() * (planets.length - 1));
+
+  return planets[randomPlanet];
+}
+
+module.exports.addDestinationInfo = addDestinationInfo;
+module.exports.validateInput = validateInput;
+module.exports.formSubmission = formSubmission;
+module.exports.pickPlanet = pickPlanet;
+module.exports.myFetch = myFetch;
+
 },{"cross-fetch/polyfill":1}]},{},[2,3]);
